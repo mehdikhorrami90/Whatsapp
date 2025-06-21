@@ -1,0 +1,22 @@
+[
+  {
+    "username": "Mehdi",
+    "saved_contacts": [
+      "Bob",
+      "Jenny",
+      "Bod"
+    ]
+  },
+  {
+    "username": "Bob",
+    "saved_contacts": [
+      "Mehdi"
+    ]
+  },
+  {
+    "username": "M",
+    "saved_contacts": [
+      "mehdi"
+    ]
+  }
+]

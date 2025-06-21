@@ -1,0 +1,64 @@
+body {
+    background-color: #EFE4D2;
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+#chat-container {
+    width: 90%;
+    max-width: 600px;
+    margin: 40px auto;
+    background-color: #254D70;
+    color: #EFE4D2;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+#chat {
+    height: 300px;
+    overflow-y: auto;
+    background-color: #131D4F;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+#chat p {
+    margin: 5px 0;
+}
+
+input[type="text"], input[type="submit"], button {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+}
+
+input[type="text"] {
+    width: 70%;
+    margin-right: 5px;
+}
+
+input[type="submit"], button {
+    background-color: #954C2E;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+input[type="submit"]:hover, button:hover {
+    background-color: #7a3d23;
+}
+
+#contacts {
+    margin-top: 20px;
+    background-color: #131D4F;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#contacts ul {
+    padding-left: 20px;
+}
