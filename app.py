@@ -164,4 +164,4 @@ def get_room_history(room, limit=50):
     return [msg.to_dict() for msg in reversed(messages)]  # Return in chronological order
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, port=5001, use_reloader=False)
+    socketio.run(app, debug=True, host="0.0.0.0", port=5001, use_reloader=False)
