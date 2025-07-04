@@ -1,32 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Chat App</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ username }}'s Chat App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
 <body>
-    <!-- Set username before client.js loads -->
+    <!-- User session data and CSRF token -->
     <script>
-        const username = "{{ username }}";  // Correctly quoted
+        window.userData = {
+            username: "{{ username | safe }}",
+            isAuthenticated: {{ 'true' if username else 'false' }}
+        };
     </script>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    <div id="chat-container">
-        <h2>Chat Room</h2>
-        <div id="chat"></div>
-
-        <input id="message" type="text" placeholder="Type a message..." />
-        <input id="send" type="submit" value="Send" />
-
-        <div id="contacts">
-            <h3>Your Contacts</h3>
-            <ul id="contact-list"></ul>
-            <input id="new-contact" type="text" placeholder="Add contact..." />
-            <button id="add-contact">Add</button>
+    <header>
+        <h1>Chat App</h1>
+        <div id="user-info">
+            <span>Logged in as: <strong>{{ username }}</strong></span>
+            <form action="/logout" method="POST" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" id="logout-btn">Logout</button>
+            </form>
         </div>
-    </div>
+    </header>
 
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <main id="chat-container">
+        <section id="chat-section">
+            <h2 id="room-name">Room: <span id="current-room">General</span></h2>
+            <div id="chat"></div> <!-- Changed back to original ID to match client.js -->
+
+            <div id="message-input-container">
+                <input id="message" type="text" placeholder="Type a message..."
+                       aria-label="Message input" autocomplete="off" />
+                <button id="send" aria-label="Send message">
+                    <span>Send</span>
+                </button>
+            </div>
+        </section>
+
+        <aside id="contacts-section">
+            <div id="contacts-header">
+                <h3>Your Contacts</h3>
+            </div>
+            <div id="contacts-container">
+                <ul id="contact-list"></ul>
+                <div id="add-contact-container">
+                    <input id="new-contact" type="text" placeholder="Add new contact..."
+                           aria-label="New contact name" />
+                    <button id="add-contact" aria-label="Add contact">+ Add</button>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Loading dependencies -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"
+            integrity="sha384-/KNQL8Nu5gCHLqwqfQjA689Hhoqgi2S84SNUxC3roTe4EhJ9AfLkp8QiQcU8AMzI"
+            crossorigin="anonymous"></script>
     <script src="{{ url_for('static', filename='client.js') }}"></script>
 </body>
 </html>

@@ -1,28 +1,39 @@
-import json
-import os
+from werkzeug.security import generate_password_hash, check_password_hash
+from models import User, db
 
-USER_FILE = "users.json"
-
-def load_users():
-    if not os.path.exists(USER_FILE):
-        return {}
-    with open(USER_FILE, "r") as f:
-        return json.load(f)
-
-def save_users(users):
-    with open(USER_FILE, "w") as f:
-        json.dump(users, f, indent=2)
 
 def register_user(username, password):
-    users = load_users()
-    if username in users:
-        return False  # user already exists
-    users.append( {"username": username, "password": password})
-    save_users(users)
-    return True
+    """Register a new user with password validation"""
+    # Input validation
+    if not username or not password:
+        return False
+    if len(password) < 8:
+        return False
+    if len(username) < 3:
+        return False
+
+    # Check for existing user
+    if User.query.filter_by(username=username).first():
+        return False
+
+    # Create and save new user
+    try:
+        user = User(username=username)
+        user.set_password(password)  # Use the model's method
+        db.session.add(user)
+        db.session.commit()
+        return user  # Return the user object for immediate login
+    except Exception as e:
+        db.session.rollback()
+        return False
+
 
 def login_user(username, password):
-    users = load_users()
-    if username in users and users[username]["password"] == password:
-        return True
-    return False
+    """Authenticate an existing user"""
+    if not username or not password:
+        return None
+
+    user = User.query.filter_by(username=username).first()
+    if user and user.check_password(password):
+        return user  # Return user object instead of boolean
+    return None

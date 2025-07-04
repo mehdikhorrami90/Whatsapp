@@ -1,18 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Chat App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-<div id="chat-container">
-    <h2>Login or Register</h2>
-    <form method="POST" action="/auth">
-        <input type="text" name="username" placeholder="Username" required /><br><br>
-        <input type="password" name="password" placeholder="Password" required /><br><br>
-        <input type="submit" name="action" value="Login" />
-        <input type="submit" name="action" value="Register" />
-    </form>
-</div>
+    <div id="chat-container" class="login-view">
+        <h2>Welcome to Chat App</h2>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="error-message">
+                    {{ messages[0] }}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="/auth" class="login-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="text"
+                   name="username"
+                   placeholder="Username"
+                   minlength="3"
+                   maxlength="20"
+                   pattern="[a-zA-Z0-9]+"
+                   title="Letters and numbers only, 3-20 characters"
+                   required
+                   autocomplete="username"
+                   aria-label="Username" />
+
+            <input type="password"
+                   name="password"
+                   placeholder="Password"
+                   minlength="3"
+                   maxlength="20"
+                   required
+                   autocomplete="current-password"
+                   aria-label="Password" />
+
+            <div class="form-actions">
+                <input type="submit"
+                       name="action"
+                       value="Login"
+                       aria-label="Login" />
+
+                <input type="submit"
+                       name="action"
+                       value="Register"
+                       aria-label="Register" />
+            </div>
+        </form>
+    </div>
 </body>
 </html>

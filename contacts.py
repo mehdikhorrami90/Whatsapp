@@ -1,49 +1,58 @@
-from flask import Blueprint, jsonify, request
-import json
-import os
+from flask import Blueprint, request, jsonify, session
+from models import db, User, Contact
 
 bp = Blueprint('contacts', __name__)
-CONTACTS_FILE = 'contacts.json'
 
 
-def load_contacts():
-    if not os.path.exists(CONTACTS_FILE):
-        return []
-    with open(CONTACTS_FILE, 'r') as f:
-        return json.load(f)
+@bp.route('/get_contacts')
+def get_contacts():
+    """Get contacts for the currently logged-in user"""
+    if 'username' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
 
+    username = session['username']  # Get username from session
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify([])
 
-def save_contacts(data):
-    with open(CONTACTS_FILE, 'w') as f:
-        json.dump(data, f, indent=2)
-
-
-@bp.route('/get_contacts/<username>')
-def get_contacts(username):
-    contacts = load_contacts()
-    for user in contacts:
-        if user['username'] == username:
-            return jsonify(user['saved_contacts'])
-    return jsonify([])
+    contacts = [c.contact_name for c in user.contacts]
+    return jsonify(contacts)
 
 
 @bp.route('/add_contact', methods=['POST'])
 def add_contact():
-    data = request.json
-    username = data.get('username')
+    """Add a new contact for the current user"""
+    if 'username' not in session:
+        return jsonify(success=False, message="Unauthorized"), 401
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({'error': 'Invalid request data'}), 400
+
     contact_name = data.get('contact_name')
+    if not contact_name:
+        return jsonify({'error': 'Contact name is required'}), 400
 
-    contacts = load_contacts()
-    for user in contacts:
-        if user['username'] == username:
-            if contact_name not in user['saved_contacts']:
-                user['saved_contacts'].append(contact_name)
-            save_contacts(contacts)
-            return jsonify(success=True)
+    username = session['username']  # Get username from session
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
 
-    contacts.append({
-        'username': username,
-        'saved_contacts': [contact_name]
-    })
-    save_contacts(contacts)
-    return jsonify(success=True)
+    # Check for duplicates
+    existing = Contact.query.filter_by(
+        user_id=user.id,
+        contact_name=contact_name
+    ).first()
+
+    if existing:
+        return jsonify({'success': True})
+
+    try:
+        contact = Contact(user_id=user.id, contact_name=contact_name)
+        db.session.add(contact)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500

@@ -1,8 +1,14 @@
 body {
-    background-color: #EFE4D2;
+    background-image: url('../static/images/yuriy-kovalev-nN1HSDtKdlw-unsplash.jpg');
+    background-size: cover;               /* Cover entire viewport */
+    background-position: center center;   /* Center the image */
+    background-attachment: fixed;         /* Fixed position on scroll */
+    background-repeat: no-repeat;         /* No repeating */
     font-family: 'Segoe UI', sans-serif;
     margin: 0;
     padding: 0;
+    min-height: 100vh;                    /* Full viewport height */
+    color: #FFF;                         /* Default text color */
 }
 
 #chat-container {
@@ -16,6 +22,40 @@ body {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
+/* Login form specific styles - will only affect login page */
+#chat-container.login-view form input[type="text"],
+#chat-container.login-view form input[type="password"] {
+    width: 300px;                   /* Fixed width */
+    height: 40px;                   /* Fixed height */
+    padding: 5px 10px;             /* Internal spacing */
+    margin: 10px 0;                 /* Vertical spacing */
+    font-size: 16px;                /* Text size */
+    border-radius: 5px;             /* Rounded corners */
+    border: 1px solid #ccc;         /* Border color */
+    background-color: #FFF;         /* White background */
+    color: #333;                    /* Dark text */
+    display: block;                 /* Each on its own line */
+    margin-left: auto;              /* Center horizontally */
+    margin-right: auto;
+}
+
+/* Remove any conflicting general styles */
+#chat-container input[type="text"],
+#chat-container input[type="password"] {
+    /* Reset any general styles that might affect login */
+    width: auto;
+    height: auto;
+    margin: 0;
+}
+
+/* Submit buttons styling */
+#chat-container.login-view form input[type="submit"] {
+    width: 140px;                   /* Fixed width for buttons */
+    height: 40px;                   /* Same height as inputs */
+    margin: 5px;                    /* Space between buttons */
+    font-size: 16px;                /* Consistent text size */
+}
+
 #chat {
     height: 300px;
     overflow-y: auto;
@@ -26,7 +66,21 @@ body {
 }
 
 #chat p {
-    margin: 5px 0;
+    margin: 8px 0;
+    padding: 8px 12px;
+    border-radius: 4px;
+    background-color: #1a2a3a;
+}
+
+#chat p.own-message {
+    background-color: #2a3a4a;
+    border-left: 3px solid #954C2E;
+}
+
+.message-time {
+    color: #7f8c8d;
+    font-size: 0.8em;
+    margin-right: 8px;
 }
 
 input[type="text"], input[type="submit"], button {
@@ -61,4 +115,40 @@ input[type="submit"]:hover, button:hover {
 
 #contacts ul {
     padding-left: 20px;
+}
+
+/* Add these to your existing style.css */
+.login-view {
+    text-align: center;
+}
+
+.login-view input[type="text"],
+.login-view input[type="password"] {
+    width: 80%;
+    margin-bottom: 15px;
+}
+
+.login-view .form-actions {
+    margin-top: 20px;
+}
+
+.error-message {
+    color: #ff6b6b;
+    margin-bottom: 15px;
+}
+
+.login-view input[type="submit"] {
+    width: 35%;
+    margin: 0 5px;
+}
+
+#contact-list {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+#add-contact-container {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
 }
