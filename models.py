@@ -1,5 +1,3 @@
-from enum import unique
-
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func
@@ -69,7 +67,6 @@ class Contact(db.Model):
         return f'<Contact {self.contact_name} of user {self.user_id}>'
 
 class Message(db.Model):
-    __tablename__ = 'messages'
     id = db.Column(db.Integer, primary_key=True)
     room = db.Column(db.String(80), nullable=False)
     username = db.Column(db.String(80), nullable=False)
@@ -86,16 +83,3 @@ class Message(db.Model):
             'message': self.content,
             'timestamp': self.timestamp.isoformat()
         }
-
-# In models.py - make sure these table names are consistent
-class Room(db.Model):
-    __tablename__ = 'rooms'  # Explicit table name
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), unique=True, nullable=False)
-    # ... rest of the model
-
-# Association table should reference the explicit table names
-room_members = db.Table('room_members',
-    db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
-    db.Column('room_id', db.Integer, db.ForeignKey('rooms.id'))  # Changed from 'room.id' to 'rooms.id'
-)
