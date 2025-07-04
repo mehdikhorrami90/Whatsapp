@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // Check if user is logged in
     const { username, isAuthenticated } = window.userData || {};
+    let currentRoom = null;
 
     if (!isAuthenticated || !username) {
         alert("Please login first");
@@ -12,17 +12,37 @@ document.addEventListener("DOMContentLoaded", () => {
     const chat = document.getElementById("chat");
     const messageInput = document.getElementById("message");
     const sendBtn = document.getElementById("send");
-    const contactList = document.getElementById("contact-list");
-    const contactInput = document.getElementById("new-contact");
-    const addContactBtn = document.getElementById("add-contact");
 
-    // Join chat room
-    const room = prompt("Enter room name:") || 'general';
-    socket.emit("join", { username, room });
+    // Room handling functions
+    function joinRoom(roomId, roomName) {
+        if (currentRoom) {
+            socket.emit('leave_room', { room: currentRoom });
+        }
+        socket.emit('join_room', {
+            room: roomId,
+            username: username
+        });
+        currentRoom = roomId;
+        document.getElementById("current-room-name").textContent = roomName;
+        loadRoomMessages(roomId);
+    }
+
+    async function loadRoomMessages(roomId) {
+        try {
+            const response = await fetch(`/api/rooms/${roomId}/messages`);
+            if (!response.ok) throw new Error("Failed to load messages");
+            const messages = await response.json();
+
+            chat.innerHTML = '';
+            messages.forEach(msg => appendMessage(msg));
+        } catch (err) {
+            console.error("Error loading messages:", err);
+            chat.innerHTML = "<p>Error loading messages</p>";
+        }
+    }
 
     // Message handling
     function appendMessage(data) {
-        // Ensure data has the expected structure
         const messageData = {
             username: data?.username || 'Unknown',
             message: data?.message || data?.content || '',
@@ -41,7 +61,6 @@ document.addEventListener("DOMContentLoaded", () => {
             ${messageData.message}
         `;
 
-        // Add visual distinction for user's own messages
         if (messageData.username === username) {
             p.classList.add('own-message');
         }
@@ -50,7 +69,26 @@ document.addEventListener("DOMContentLoaded", () => {
         chat.scrollTop = chat.scrollHeight;
     }
 
-    // Message history handler
+    // Message sending
+    function sendMessage() {
+        const msg = messageInput.value.trim();
+        if (msg && currentRoom) {
+            socket.emit("send_message", {
+                room: currentRoom,
+                username: username,
+                message: msg
+            });
+            messageInput.value = "";
+        }
+    }
+
+    // Socket event handlers
+    socket.on('message', (data) => {
+        if (data.room === currentRoom) {
+            appendMessage(data);
+        }
+    });
+
     socket.on('message_history', (messages) => {
         messages.forEach(msg => {
             appendMessage({
@@ -61,111 +99,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Real-time message handler
-    socket.on("message", (data) => {
-        if (typeof data === 'string') {
-            // Handle legacy string messages
-            appendMessage({
-                username: 'System',
-                message: data
-            });
-        } else {
-            // Handle proper message objects
-            appendMessage(data);
-        }
-    });
-
-    // Message sending
-    function sendMessage() {
-        const msg = messageInput.value.trim();
-        if (msg) {
-            socket.emit("send_message", {
-                username: username,
-                message: msg
-            });
-            messageInput.value = "";
-        }
-    }
-
+    // Event listeners
     sendBtn.onclick = sendMessage;
     messageInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") sendMessage();
     });
 
-    // Contact management
-    async function loadContacts() {
-        try {
-            const res = await fetch('/get_contacts');
-            if (!res.ok) throw new Error("Failed to load contacts");
-            const contacts = await res.json();
-
-            contactList.innerHTML = "";
-            contacts.forEach(contact => {
-                const li = document.createElement("li");
-                li.textContent = contact;
-                li.addEventListener('click', () => {
-                    // Optional: Implement contact click functionality
-                });
-                contactList.appendChild(li);
-            });
-        } catch (err) {
-            console.error("Error loading contacts:", err);
-            contactList.innerHTML = "<li class='error'>Unable to load contacts</li>";
-        }
+    // Initialize by joining the first room if we're on a room page
+    if (window.location.pathname.startsWith('/room/')) {
+        const roomId = window.location.pathname.split('/')[2];
+        const roomName = document.getElementById("current-room-name").textContent;
+        joinRoom(roomId, roomName);
     }
-
-    socket.on("joined", loadContacts);
-
-    // Add new contact
-    async function addContact() {
-        const contact = contactInput.value.trim();
-        if (!contact) return;
-
-        // Client-side duplicate check
-        const existingContacts = Array.from(contactList.querySelectorAll('li'));
-        if (existingContacts.some(li => li.textContent === contact)) {
-            alert('Contact already exists');
-            return;
-        }
-
-        try {
-            const csrfToken = document.querySelector("[name='csrf_token']")?.value;
-            if (!csrfToken) throw new Error("Missing CSRF token");
-
-            const response = await fetch("/add_contact", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken
-                },
-                body: JSON.stringify({ contact_name: contact })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || "Failed to add contact");
-            }
-
-            if (data.success) {
-                const li = document.createElement("li");
-                li.textContent = contact;
-                contactList.appendChild(li);
-                contactInput.value = "";
-            } else {
-                alert(data.message || "Contact not added");
-            }
-        } catch (err) {
-            console.error("Error adding contact:", err);
-            alert(err.message);
-        }
-    }
-
-    addContactBtn.onclick = addContact;
-    contactInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") addContact();
-    });
-
-    // Initial load
-    loadContacts();
 });
