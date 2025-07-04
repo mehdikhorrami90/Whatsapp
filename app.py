@@ -1,6 +1,6 @@
 import datetime
 
-from flask import Flask, render_template, request, session, redirect, flash
+from flask import Flask, render_template, request, session, redirect, flash, jsonify
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -163,5 +163,37 @@ def get_room_history(room, limit=50):
                  .all()
     return [msg.to_dict() for msg in reversed(messages)]  # Return in chronological order
 
+@app.route('/api/rooms/messages')
+@login_required
+def get_room_messages():
+    room_name = request.args.get('room', 'general')
+    messages = Message.query.filter_by(room=room_name)\
+                  .order_by(Message.timestamp.asc())\
+                  .all()
+    return jsonify([m.to_dict() for m in messages])
+
+
+# Update the join_room handler to properly track room membership
+@socketio.on('join_room')
+def handle_join_room(data):
+    if not current_user.is_authenticated:
+        return
+
+    room = data.get('room', 'general')
+    username = data.get('username')
+
+    # Update user's current room
+    if request.sid in user_data:
+        user_data[request.sid]['room'] = room
+
+    join_room(room)
+    emit('message_history', get_room_history(room))
+
+    # Notify others
+    emit('message', {
+        'username': 'System',
+        'message': f'{username} has joined the room',
+        'timestamp': datetime.datetime.now(datetime.UTC).isoformat()
+    }, room=room)
 if __name__ == '__main__':
     socketio.run(app, debug=True, host="0.0.0.0", port=5001, use_reloader=False)

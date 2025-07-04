@@ -16,9 +16,35 @@ document.addEventListener("DOMContentLoaded", () => {
     const contactInput = document.getElementById("new-contact");
     const addContactBtn = document.getElementById("add-contact");
 
-    // Join chat room
-    const room = prompt("Enter room name:") || 'general';
-    socket.emit("join", { username, room });
+    // Room change UI handling
+const roomInput = document.getElementById("room-input");
+const changeBtn = document.getElementById("change-room-btn");
+const confirmBtn = document.getElementById("confirm-room-btn");
+
+changeBtn.addEventListener('click', () => {
+    roomInput.style.display = 'inline';
+    confirmBtn.style.display = 'inline';
+    changeBtn.style.display = 'none';
+    roomInput.focus();
+});
+
+confirmBtn.addEventListener('click', () => {
+    const newRoom = roomInput.value.trim() || 'general';
+    changeRoom(newRoom);
+    roomInput.style.display = 'none';
+    confirmBtn.style.display = 'none';
+    changeBtn.style.display = 'inline';
+    roomInput.value = '';
+});
+
+roomInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        confirmBtn.click();
+    }
+});
+
+    let currentRoom = 'general'; // Default room
+    socket.emit("join", { username, room: currentRoom });
 
     // Message handling
     function appendMessage(data) {
@@ -168,4 +194,88 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Initial load
     loadContacts();
+
+    // Room handling functions
+    function showRoomInput() {
+        currentRoomDisplay.style.display = 'none';
+        changeRoomBtn.style.display = 'none';
+        roomInputContainer.style.display = 'block';
+        roomInput.focus();
+    }
+    function hideRoomInput() {
+        currentRoomDisplay.style.display = 'inline';
+        changeRoomBtn.style.display = 'inline';
+        roomInputContainer.style.display = 'none';
+    }
+
+
+    // Fix the handleRoomChange function (remove duplicate currentRoom assignment)
+async function handleRoomChange() {  // Remove parameter since we get it from roomInput
+    const newRoom = roomInput.value.trim() || 'general';
+    if (newRoom === currentRoom) return;
+
+    // Leave current room
+    socket.emit('leave_room', { room: currentRoom });
+
+    // Join new room
+    socket.emit('join_room', {
+        username: username,
+        room: newRoom
+    });
+
+    currentRoom = newRoom;
+    document.getElementById("current-room").textContent = newRoom;
+
+    // Clear chat and load messages
+    chat.innerHTML = '';
+    await loadRoomMessages();
+
+    // Hide input after change
+    roomInput.style.display = 'none';
+    confirmBtn.style.display = 'none';
+    changeBtn.style.display = 'inline';
+    roomInput.value = '';
+}
+
+// Fix the Enter key handler
+roomInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        handleRoomChange();  // Call without parameter
+    }
+});
+
+// Add these event listeners
+changeRoomBtn.addEventListener('click', showRoomInput);
+confirmRoomBtn.addEventListener('click', handleRoomChange);
+roomInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') handleRoomChange();
+});
+
+// Modify your existing join handling
+socket.on("join", (data) => {
+    currentRoom = data.room;
+    currentRoomDisplay.textContent = data.room;
+});
+
+// Add this helper function
+async function loadRoomMessages(room) {
+    try {
+        const response = await fetch(`/api/rooms/messages?room=${encodeURIComponent(currentRoom)}`);
+            if (!response.ok) throw new Error("Failed to load messages");
+            const messages = await response.json();
+
+        chat.innerHTML = '';
+        messages.forEach(msg => {
+            appendMessage({
+                username: msg.username,
+                message: msg.content || msg.message,
+                timestamp: msg.timestamp
+            });
+        });
+    } catch (err) {
+        console.error("Error loading messages:", err);
+        chat.innerHTML = "<p>Error loading messages</p>";
+    }
+}
+
 });

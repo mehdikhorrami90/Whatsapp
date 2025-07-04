@@ -29,7 +29,12 @@
 
     <main id="chat-container">
         <section id="chat-section">
-            <h2 id="room-name">Room: <span id="current-room">General</span></h2>
+            <h2 id="room-name">
+            Room: <span id="current-room">General</span>
+            <input type="text" id="room-input" placeholder="Change room..." style="display: none;">
+            <button id="change-room-btn">Change</button>
+            <button id="confirm-room-btn" style="display: none;">Go</button>
+            </h2>
             <div id="chat"></div> <!-- Changed back to original ID to match client.js -->
 
             <div id="message-input-container">
