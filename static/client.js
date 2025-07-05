@@ -110,12 +110,16 @@ roomInput.addEventListener('keypress', (e) => {
                 message: msg
             });
             messageInput.value = "";
+            messageInput.style.height = 'auto'
         }
     }
 
     sendBtn.onclick = sendMessage;
     messageInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") sendMessage();
+        if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+        }
     });
 
     // Contact management
