@@ -112,6 +112,14 @@ roomInput.addEventListener('keypress', (e) => {
             messageInput.value = "";
             messageInput.style.height = 'auto'
         }
+
+        // Auto-resize textarea
+        if (e.key === 'Enter' || e.key === 'Backspace') {
+        setTimout(() => {
+             messageInput.style.height = 'auto';
+             messageInput.style.height = `${Math.min(messageInput.scrollHeight, 120)}px`;
+             }, 0);
+        }
     }
 
     sendBtn.onclick = sendMessage;
