@@ -17,9 +17,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const addContactBtn = document.getElementById("add-contact");
 
     // Room change UI handling
-const roomInput = document.getElementById("room-input");
-const changeBtn = document.getElementById("change-room-btn");
-const confirmBtn = document.getElementById("confirm-room-btn");
+    const roomInput = document.getElementById("room-input");
+    const changeBtn = document.getElementById("change-room-btn");
+    const confirmBtn = document.getElementById("confirm-room-btn");
 
 changeBtn.addEventListener('click', () => {
     roomInput.style.display = 'inline';
@@ -245,8 +245,8 @@ roomInput.addEventListener('keypress', (e) => {
 });
 
 // Add these event listeners
-changeRoomBtn.addEventListener('click', showRoomInput);
-confirmRoomBtn.addEventListener('click', handleRoomChange);
+changeBtn.addEventListener('click', showRoomInput);
+confirmBtn.addEventListener('click', handleRoomChange);
 roomInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') handleRoomChange();
 });
