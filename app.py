@@ -199,6 +199,7 @@ def handle_join_room(data):
         'timestamp': datetime.datetime.now(datetime.UTC).isoformat()
     }, room=room)
 
+
 @bp.route('/get_contacts/<username>')
 def get_contacts(username):
     user = User.query.filter_by(username=username).first()
