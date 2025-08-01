@@ -57,7 +57,7 @@ body {
 }
 
 #chat {
-    height: 300px;
+    height: 100px;
     overflow-y: auto;
     background-color: #131D4F;
     padding: 10px;
@@ -66,6 +66,10 @@ body {
 }
 
 #chat p {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-width: 100%
+    overflow-wrap: break-word
     margin: 8px 0;
     padding: 8px 12px;
     border-radius: 4px;
