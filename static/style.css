@@ -57,7 +57,7 @@ body {
 }
 
 #chat {
-    height: 100px;
+    height: 300px;
     overflow-y: auto;
     background-color: #131D4F;
     padding: 10px;
