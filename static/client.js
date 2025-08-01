@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const contactList = document.getElementById("contact-list");
     const contactInput = document.getElementById("new-contact");
     const addContactBtn = document.getElementById("add-contact");
+    const currentRoomDisplay = document.getElementById("current-room");
 
     // Room change UI handling
     const roomInput = document.getElementById("room-input");
@@ -30,7 +31,7 @@ changeBtn.addEventListener('click', () => {
 
 confirmBtn.addEventListener('click', () => {
     const newRoom = roomInput.value.trim() || 'general';
-    changeRoom(newRoom);
+    handleRoomChange();
     roomInput.style.display = 'none';
     confirmBtn.style.display = 'none';
     changeBtn.style.display = 'inline';
@@ -115,7 +116,7 @@ roomInput.addEventListener('keypress', (e) => {
 
         // Auto-resize textarea
         if (e.key === 'Enter' || e.key === 'Backspace') {
-        setTimout(() => {
+        setTimeout(() => {
              messageInput.style.height = 'auto';
              messageInput.style.height = `${Math.min(messageInput.scrollHeight, 120)}px`;
              }, 0);
@@ -128,6 +129,13 @@ roomInput.addEventListener('keypress', (e) => {
         e.preventDefault();
         sendMessage();
         }
+
+        // Auto-resize
+        if (e.key === 'Enter' || e.key === 'Backspace'){
+           setTimeout(() => {
+              messageInput.style.height = 'auto';
+              messageInput.style.height = `${Math.min(messageInput.scrollHeight, 120`)}, 0);
+           }
     });
 
     // Contact management
