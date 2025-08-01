@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // Check if user is logged in
     const { username, isAuthenticated } = window.userData || {};
 
     if (!isAuthenticated || !username) {
@@ -9,47 +8,66 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const socket = io();
+    let currentRoom = 'general';
+
+    // DOM Elements
     const chat = document.getElementById("chat");
     const messageInput = document.getElementById("message");
     const sendBtn = document.getElementById("send");
+
     const contactList = document.getElementById("contact-list");
     const contactInput = document.getElementById("new-contact");
     const addContactBtn = document.getElementById("add-contact");
-    const currentRoomDisplay = document.getElementById("current-room");
 
-    // Room change UI handling
+    const currentRoomDisplay = document.getElementById("current-room");
     const roomInput = document.getElementById("room-input");
     const changeBtn = document.getElementById("change-room-btn");
     const confirmBtn = document.getElementById("confirm-room-btn");
 
-changeBtn.addEventListener('click', () => {
-    roomInput.style.display = 'inline';
-    confirmBtn.style.display = 'inline';
-    changeBtn.style.display = 'none';
-    roomInput.focus();
-});
+    // --- Room UI ---
+    changeBtn.addEventListener('click', () => {
+        roomInput.style.display = 'inline';
+        confirmBtn.style.display = 'inline';
+        changeBtn.style.display = 'none';
+        roomInput.focus();
+    });
 
-confirmBtn.addEventListener('click', () => {
-    const newRoom = roomInput.value.trim() || 'general';
-    handleRoomChange();
-    roomInput.style.display = 'none';
-    confirmBtn.style.display = 'none';
-    changeBtn.style.display = 'inline';
-    roomInput.value = '';
-});
+    confirmBtn.addEventListener('click', handleRoomChange);
 
-roomInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        confirmBtn.click();
+    roomInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleRoomChange();
+        }
+    });
+
+    async function handleRoomChange() {
+        const newRoom = roomInput.value.trim() || 'general';
+        if (newRoom === currentRoom) return;
+
+        socket.emit('leave_room', { room: currentRoom });
+
+        socket.emit('join', {
+            username: username,
+            room: newRoom
+        });
+
+        currentRoom = newRoom;
+        currentRoomDisplay.textContent = newRoom;
+        chat.innerHTML = '';
+        await loadRoomMessages();
+
+        // Reset input
+        roomInput.style.display = 'none';
+        confirmBtn.style.display = 'none';
+        changeBtn.style.display = 'inline';
+        roomInput.value = '';
     }
-});
 
-    let currentRoom = 'general'; // Default room
+    // --- Join Room Initially ---
     socket.emit("join", { username, room: currentRoom });
 
-    // Message handling
+    // --- Append Message to Chat ---
     function appendMessage(data) {
-        // Ensure data has the expected structure
         const messageData = {
             username: data?.username || 'Unknown',
             message: data?.message || data?.content || '',
@@ -68,7 +86,6 @@ roomInput.addEventListener('keypress', (e) => {
             ${messageData.message}
         `;
 
-        // Add visual distinction for user's own messages
         if (messageData.username === username) {
             p.classList.add('own-message');
         }
@@ -77,32 +94,26 @@ roomInput.addEventListener('keypress', (e) => {
         chat.scrollTop = chat.scrollHeight;
     }
 
-    // Message history handler
-    socket.on('message_history', (messages) => {
-        messages.forEach(msg => {
-            appendMessage({
-                username: msg.username,
-                message: msg.content || msg.message,
-                timestamp: msg.timestamp
-            });
-        });
-    });
-
-    // Real-time message handler
+    // --- Socket Events ---
     socket.on("message", (data) => {
         if (typeof data === 'string') {
-            // Handle legacy string messages
-            appendMessage({
-                username: 'System',
-                message: data
-            });
+            appendMessage({ username: 'System', message: data });
         } else {
-            // Handle proper message objects
             appendMessage(data);
         }
     });
 
-    // Message sending
+    socket.on('message_history', (messages) => {
+        messages.forEach(msg => appendMessage({
+            username: msg.username,
+            message: msg.content || msg.message,
+            timestamp: msg.timestamp
+        }));
+    });
+
+    socket.on("joined", loadContacts);
+
+    // --- Send Message ---
     function sendMessage() {
         const msg = messageInput.value.trim();
         if (msg) {
@@ -111,37 +122,31 @@ roomInput.addEventListener('keypress', (e) => {
                 message: msg
             });
             messageInput.value = "";
-            messageInput.style.height = 'auto'
-        }
-
-        // Auto-resize textarea
-        if (e.key === 'Enter' || e.key === 'Backspace') {
-        setTimeout(() => {
-             messageInput.style.height = 'auto';
-             messageInput.style.height = `${Math.min(messageInput.scrollHeight, 120)}px`;
-             }, 0);
+            messageInput.style.height = 'auto';
         }
     }
 
     sendBtn.onclick = sendMessage;
+
     messageInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
+            e.preventDefault();
+            sendMessage();
         }
 
-        // Auto-resize
-        if (e.key === 'Enter' || e.key === 'Backspace'){
-           setTimeout(() => {
-              messageInput.style.height = 'auto';
-              messageInput.style.height = `${Math.min(messageInput.scrollHeight, 120`)}, 0);
-           }
+        // Auto-resize input
+        if (['Enter', 'Backspace'].includes(e.key)) {
+            setTimeout(() => {
+                messageInput.style.height = 'auto';
+                messageInput.style.height = `${Math.min(messageInput.scrollHeight, 120)}px`;
+            }, 0);
+        }
     });
 
-    // Contact management
+    // --- Contacts ---
     async function loadContacts() {
         try {
-            const res = await fetch('/get_contacts');
+            const res = await fetch(`/get_contacts/${username}`);
             if (!res.ok) throw new Error("Failed to load contacts");
             const contacts = await res.json();
 
@@ -149,9 +154,6 @@ roomInput.addEventListener('keypress', (e) => {
             contacts.forEach(contact => {
                 const li = document.createElement("li");
                 li.textContent = contact;
-                li.addEventListener('click', () => {
-                    // Optional: Implement contact click functionality
-                });
                 contactList.appendChild(li);
             });
         } catch (err) {
@@ -160,14 +162,10 @@ roomInput.addEventListener('keypress', (e) => {
         }
     }
 
-    socket.on("joined", loadContacts);
-
-    // Add new contact
     async function addContact() {
         const contact = contactInput.value.trim();
         if (!contact) return;
 
-        // Client-side duplicate check
         const existingContacts = Array.from(contactList.querySelectorAll('li'));
         if (existingContacts.some(li => li.textContent === contact)) {
             alert('Contact already exists');
@@ -188,19 +186,14 @@ roomInput.addEventListener('keypress', (e) => {
             });
 
             const data = await response.json();
-
-            if (!response.ok) {
+            if (!response.ok || !data.success) {
                 throw new Error(data.message || "Failed to add contact");
             }
 
-            if (data.success) {
-                const li = document.createElement("li");
-                li.textContent = contact;
-                contactList.appendChild(li);
-                contactInput.value = "";
-            } else {
-                alert(data.message || "Contact not added");
-            }
+            const li = document.createElement("li");
+            li.textContent = contact;
+            contactList.appendChild(li);
+            contactInput.value = "";
         } catch (err) {
             console.error("Error adding contact:", err);
             alert(err.message);
@@ -208,94 +201,30 @@ roomInput.addEventListener('keypress', (e) => {
     }
 
     addContactBtn.onclick = addContact;
+
     contactInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") addContact();
     });
 
-    // Initial load
-    loadContacts();
-
-    // Room handling functions
-    function showRoomInput() {
-        currentRoomDisplay.style.display = 'none';
-        changeRoomBtn.style.display = 'none';
-        roomInputContainer.style.display = 'block';
-        roomInput.focus();
-    }
-    function hideRoomInput() {
-        currentRoomDisplay.style.display = 'inline';
-        changeRoomBtn.style.display = 'inline';
-        roomInputContainer.style.display = 'none';
-    }
-
-
-    // Fix the handleRoomChange function (remove duplicate currentRoom assignment)
-async function handleRoomChange() {  // Remove parameter since we get it from roomInput
-    const newRoom = roomInput.value.trim() || 'general';
-    if (newRoom === currentRoom) return;
-
-    // Leave current room
-    socket.emit('leave_room', { room: currentRoom });
-
-    // Join new room
-    socket.emit('join_room', {
-        username: username,
-        room: newRoom
-    });
-
-    currentRoom = newRoom;
-    document.getElementById("current-room").textContent = newRoom;
-
-    // Clear chat and load messages
-    chat.innerHTML = '';
-    await loadRoomMessages();
-
-    // Hide input after change
-    roomInput.style.display = 'none';
-    confirmBtn.style.display = 'none';
-    changeBtn.style.display = 'inline';
-    roomInput.value = '';
-}
-
-// Fix the Enter key handler
-roomInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        handleRoomChange();  // Call without parameter
-    }
-});
-
-// Add these event listeners
-changeBtn.addEventListener('click', showRoomInput);
-confirmBtn.addEventListener('click', handleRoomChange);
-roomInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') handleRoomChange();
-});
-
-// Modify your existing join handling
-socket.on("join", (data) => {
-    currentRoom = data.room;
-    currentRoomDisplay.textContent = data.room;
-});
-
-// Add this helper function
-async function loadRoomMessages(room) {
-    try {
-        const response = await fetch(`/api/rooms/messages?room=${encodeURIComponent(currentRoom)}`);
+    // --- Load messages for current room ---
+    async function loadRoomMessages() {
+        try {
+            const response = await fetch(`/api/rooms/messages?room=${encodeURIComponent(currentRoom)}`);
             if (!response.ok) throw new Error("Failed to load messages");
             const messages = await response.json();
 
-        chat.innerHTML = '';
-        messages.forEach(msg => {
-            appendMessage({
+            chat.innerHTML = '';
+            messages.forEach(msg => appendMessage({
                 username: msg.username,
                 message: msg.content || msg.message,
                 timestamp: msg.timestamp
-            });
-        });
-    } catch (err) {
-        console.error("Error loading messages:", err);
-        chat.innerHTML = "<p>Error loading messages</p>";
+            }));
+        } catch (err) {
+            console.error("Error loading messages:", err);
+            chat.innerHTML = "<p>Error loading messages</p>";
+        }
     }
-}
 
+    // Initial contact list
+    loadContacts();
 });
