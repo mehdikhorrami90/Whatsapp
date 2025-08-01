@@ -1,6 +1,7 @@
 import datetime
 
 from flask import Flask, render_template, request, session, redirect, flash, jsonify
+from flask.sansio.blueprints import Blueprint
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -29,6 +30,8 @@ csrf = CSRFProtect(app)
 
 # Track user sessions by socket ID
 user_data = {}
+
+bp = Blueprint('contacts', __name__)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -195,5 +198,13 @@ def handle_join_room(data):
         'message': f'{username} has joined the room',
         'timestamp': datetime.datetime.now(datetime.UTC).isoformat()
     }, room=room)
+
+@bp.route('/get_contacts/<username>')
+def get_contacts(username):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify([])
+    return jsonify([contact.name for contact in user.contacts])
+
 if __name__ == '__main__':
     socketio.run(app, debug=True, host="0.0.0.0", port=5001, use_reloader=False)
