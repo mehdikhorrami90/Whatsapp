@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'super_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chatapp.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/chatapp.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize extensions
@@ -200,4 +200,6 @@ def handle_join_room(data):
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host="0.0.0.0", port=5001, use_reloader=False)
+    with app.app_context():
+        print("[DEBUG] Database URL: ", db.engine.url)
+        socketio.run(app)
