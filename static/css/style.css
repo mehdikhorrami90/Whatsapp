@@ -86,6 +86,14 @@ body {
     margin-right: 8px;
 }
 
+#message {
+height: 40px;
+min-height: 40px;
+max-height: 120px;
+resize: none;
+overflow-y: auto;
+box-sizing: border-box;
+}
 input[type="text"], input[type="submit"], button {
     padding: 10px;
     border: none;
