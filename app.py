@@ -99,13 +99,6 @@ def get_room_messages():
                   .all()
     return jsonify([m.to_dict() for m in messages])
 
-@app.route('/get_contacts/<username>')
-def get_contacts(username):
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        return jsonify([])
-    return jsonify([contact.name for contact in user.contacts])
-
 # SocketIO Events
 @socketio.on('join')
 def handle_join(data):
