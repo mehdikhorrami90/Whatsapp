@@ -6,7 +6,7 @@ from models import db, User, Contact
 
 bp = Blueprint('contacts', __name__)
 
-@bp.route('/get_contacts', methods=['GET'])
+@bp.route('/get_contacts/<username>', methods=['GET'])  # Changed to accept username parameter
 @login_required
 def get_contacts(username):
     """Get contacts for the currently logged-in user"""

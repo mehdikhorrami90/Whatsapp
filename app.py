@@ -24,7 +24,7 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
 # Register Blueprints
-app.register_blueprint(contacts_bp)
+app.register_blueprint(contacts_bp, url_prefix='/contacts')
 
 csrf = CSRFProtect(app)
 
