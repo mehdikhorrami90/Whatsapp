@@ -122,19 +122,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 message: msg
             });
             messageInput.value = "";
-            resetInputHeight();
+            messageInput.style.height = 'auto';
         }
     }
 
-    function resetInputHeight(){
-    messageInput.style.height = 'auto';
-    messageInput.style.height = '28px;
-    }
-
-    sendBtn.onclick = function(e){
-    e.preventDefault();
-    sendMessage()
-    };
+    sendBtn.onclick = sendMessage;
 
     messageInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
@@ -143,10 +135,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Auto-resize input
+        if (['Enter', 'Backspace'].includes(e.key)) {
             setTimeout(() => {
                 messageInput.style.height = 'auto';
                 messageInput.style.height = `${Math.min(messageInput.scrollHeight, 120)}px`;
             }, 0);
+        }
     });
 
     // --- Contacts ---

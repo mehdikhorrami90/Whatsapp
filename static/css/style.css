@@ -86,14 +86,6 @@ body {
     margin-right: 8px;
 }
 
-#message {
-    height: 40px; /* Fixed initial height */
-    min-height: 40px;
-    max-height: 120px;
-    transition: height 0.2s ease;
-    box-sizing: border-box; /* Include padding in height */
-}
-
 input[type="text"], input[type="submit"], button {
     padding: 10px;
     border: none;
