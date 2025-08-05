@@ -123,7 +123,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             messageInput.value = "";
             messageInput.style.height = 'auto';
-            messageInput.style.height = '40px';
         }
     }
 
@@ -136,12 +135,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Auto-resize input
-        if (['Enter', 'Backspace'].includes(e.key)) {
             setTimeout(() => {
                 messageInput.style.height = 'auto';
                 messageInput.style.height = `${Math.min(messageInput.scrollHeight, 120)}px`;
             }, 0);
-        }
     });
 
     // --- Contacts ---
