@@ -146,7 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- Contacts ---
     async function loadContacts() {
         try {
-            const res = await fetch(`/get_contacts/${username}`);
+            const res = await fetch(`/contacts/get_contacts/${username}`);
             if (!res.ok) throw new Error("Failed to load contacts");
             const contacts = await res.json();
 
@@ -176,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const csrfToken = document.querySelector("[name='csrf_token']")?.value;
             if (!csrfToken) throw new Error("Missing CSRF token");
 
-            const response = await fetch("/add_contact", {
+            const response = await fetch("/contacts/add_contact", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
