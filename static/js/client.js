@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             messageInput.value = "";
             messageInput.style.height = 'auto';
-            messageInput.style.height = '38px'
+            messageInput.style.height = '18px'
         }
     }
 
