@@ -122,11 +122,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 message: msg
             });
             messageInput.value = "";
-            messageInput.style.height = 'auto';
+            resetInputHeight();
         }
     }
 
-    sendBtn.onclick = sendMessage;
+    function resetInputHeight(){
+    messageInput.style.height = 'auto';
+    messageInput.style.height = '28px;
+    }
+
+    sendBtn.onclick = function(e){
+    e.preventDefault();
+    sendMessage()
+    };
 
     messageInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
