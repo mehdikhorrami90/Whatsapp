@@ -137,7 +137,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // Auto-resize input
             setTimeout(() => {
                 messageInput.style.height = 'auto';
-                messageInput.style.height = `${Math.min(messageInput.scrollHeight, 120)}px`;
             }, 0);
     });
 
