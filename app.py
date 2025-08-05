@@ -90,6 +90,22 @@ def logout():
 def chat_page():
     return render_template("index.html", username=session["username"])
 
+@app.route('/api/rooms/messages')
+@login_required
+def get_room_messages():
+    room_name = request.args.get('room', 'general')
+    messages = Message.query.filter_by(room=room_name)\
+                  .order_by(Message.timestamp.asc())\
+                  .all()
+    return jsonify([m.to_dict() for m in messages])
+
+@app.route('/get_contacts/<username>')
+def get_contacts(username):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify([])
+    return jsonify([contact.name for contact in user.contacts])
+
 # SocketIO Events
 @socketio.on('join')
 def handle_join(data):
@@ -166,16 +182,6 @@ def get_room_history(room, limit=50):
                  .all()
     return [msg.to_dict() for msg in reversed(messages)]  # Return in chronological order
 
-@app.route('/api/rooms/messages')
-@login_required
-def get_room_messages():
-    room_name = request.args.get('room', 'general')
-    messages = Message.query.filter_by(room=room_name)\
-                  .order_by(Message.timestamp.asc())\
-                  .all()
-    return jsonify([m.to_dict() for m in messages])
-
-
 # Update the join_room handler to properly track room membership
 @socketio.on('join_room')
 def handle_join_room(data):
@@ -199,13 +205,6 @@ def handle_join_room(data):
         'timestamp': datetime.datetime.now(datetime.UTC).isoformat()
     }, room=room)
 
-
-@bp.route('/get_contacts/<username>')
-def get_contacts(username):
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        return jsonify([])
-    return jsonify([contact.name for contact in user.contacts])
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, host="0.0.0.0", port=5001, use_reloader=False)
